@@ -24,3 +24,7 @@ dotconfig-*.tar
 
 #Editor
 .idea
+.elixir_ls
+
+# Escript builds
+bin

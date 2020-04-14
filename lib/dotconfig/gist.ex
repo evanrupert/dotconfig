@@ -7,14 +7,34 @@ defmodule Dotconfig.Gist do
     description: binary()
   }
 
-  @spec get(binary()) :: map()
-  def get(id) do
-    API.get("gists/#{id}")
+  @spec create_initial(binary()) :: {:ok, binary()} | {:error, binary()}
+  def create_initial(auth_token) do
+    gist_request = %{
+      files: %{
+        "Dotconfig" => %{
+          content: "Dotfile storage gist"
+        }
+      },
+      public: false,
+      description: "Dotfile storage gist"
+    }
+
+    case create(gist_request, auth_token) do
+      {:ok, resp} ->
+        {:ok, resp["id"]}
+      x ->
+        x
+    end
   end
 
-  @spec create(gist_request) :: map()
-  def create(gist_request) do
-    API.post("gists", gist_request)
+  @spec get(binary(), binary()) :: API.response
+  defp get(id, auth_token) do
+    API.get("gists/#{id}", auth_token)
+  end
+
+  @spec create(gist_request(), binary()) :: API.response()
+  defp create(gist_request, auth_token) do
+    API.post("gists", auth_token, gist_request)
   end
 
 end

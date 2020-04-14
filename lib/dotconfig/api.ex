@@ -1,11 +1,13 @@
 defmodule Dotconfig.API do
   @base_url "https://api.github.com/"
-  @api_token System.get_env("GITHUB_GIST_TOKEN")
+  # @api_token System.get_env("GITHUB_GIST_TOKEN")
 
-  @spec get(binary()) :: {:ok, map()} | {:error, binary()}
-  def get(method) do
+  @type response :: {:ok, map()} | {:error, binary()}
+
+  @spec get(binary(), binary()) :: response
+  def get(method, auth_token) do
     headers = [
-      "Authorization": "Bearer #{@api_token}",
+      "Authorization": "Bearer #{auth_token}",
       "Accept": "application/vnd.github.v3+json"
     ]
 
@@ -13,10 +15,10 @@ defmodule Dotconfig.API do
     |> parse_resp()
   end
 
-  @spec post(binary(), map()) :: {:ok, map()} | {:error, binary()}
-  def post(method, body) do
+  @spec post(binary(), binary(), map()) :: response
+  def post(method, auth_token, body) do
     headers = [
-      "Authorization": "Bearer #{@api_token}",
+      "Authorization": "Bearer #{auth_token}",
       "Accept": "application/vnd.github.v3+json",
       "Content-Type": "application/json"
     ]
@@ -27,7 +29,7 @@ defmodule Dotconfig.API do
 
   defp parse_resp(response) do
     with {:ok, resp} <- response,
-         json <- Jason.decode(resp.body)
+         json <- Jason.decode!(resp.body)
       do
       {:ok, json}
     else
