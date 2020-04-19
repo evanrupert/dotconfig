@@ -1,6 +1,8 @@
 defmodule Dotconfig do
   alias Dotconfig.{CLI, Gist, Storage}
 
+  import OK, only: [success: 1, failure: 1]
+
   def main(args) do
     case CLI.parse(args) do
       {:ok, args} ->
@@ -14,6 +16,8 @@ defmodule Dotconfig do
     case args.subcommand do
       :init ->
         initialize()
+      :add ->
+        add(args)
       _ ->
         invalid()
     end
@@ -35,7 +39,17 @@ defmodule Dotconfig do
       {:error, reason} ->
         IO.puts "Failed to create gist with reason: #{reason}"
     end
+  end
 
+  defp add(args) do
+    [filepath | []] = args.args
+
+    case Gist.add_file(filepath) do
+      success(_) ->
+        Storage.add_file(filepath)
+      failure(reason) ->
+        IO.puts(IO.ANSI.red <> reason <> IO.ANSI.reset)
+    end
   end
 
   defp ask_for_token do

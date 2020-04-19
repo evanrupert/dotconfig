@@ -9,33 +9,39 @@ defmodule Dotconfig.CLI do
 
   @type cli_args :: %{
     help: boolean(),
-    subcommand: atom()
+    subcommand: atom(),
+    args: list(binary())
   }
 
   @spec parse(list(binary())) :: {:ok, cli_args} | :error
   def parse(args) do
     {flags, commands, _} = OptionParser.parse(args, strict: [help: :boolean])
 
-    if length(commands) < 1 do
-      :error
-    else
-      {:ok, put_subcommand_into_flags(flags, commands)}
+    case commands do
+      [subcommand | args] when args != [] ->
+        flags
+        |> put_subcommand(subcommand)
+        |> Map.put(:args, args)
+        |> ok()
+      [subcommand | []] ->
+        flags
+        |> put_subcommand(subcommand)
+        |> ok()
+      [] ->
+        :error
     end
   end
 
-  def print_help do
-    IO.puts @help
-  end
-
-  defp put_subcommand_into_flags(flags, commands) do
-    subcommand =
-      commands
-      |> List.first()
-      |> String.to_atom()
-
+  defp put_subcommand(flags, subcommand) do
     flags
     |> Map.new()
-    |> Map.put(:subcommand, subcommand)
+    |> Map.put(:subcommand, String.to_atom(subcommand))
+  end
+
+  defp ok(x), do: {:ok, x}
+
+  def print_help do
+    IO.puts @help
   end
 
 end

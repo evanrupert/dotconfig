@@ -27,6 +27,18 @@ defmodule Dotconfig.API do
     |> parse_resp()
   end
 
+  @spec patch(binary(), binary(), map()) :: response
+  def patch(method, auth_token, body) do
+    headers = [
+      "Authorization": "Bearer #{auth_token}",
+      "Accept": "application/vnd.github.v3+json",
+      "Content-Type": "application/json"
+    ]
+
+    HTTPoison.patch(@base_url <> method, Jason.encode!(body), headers)
+    |> parse_resp()
+  end
+
   defp parse_resp(response) do
     with {:ok, resp} <- response,
          json <- Jason.decode!(resp.body)

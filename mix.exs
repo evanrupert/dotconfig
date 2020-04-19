@@ -22,7 +22,8 @@ defmodule Dotconfig.MixProject do
   defp deps do
     [
       {:httpoison, "~> 1.6"},
-      {:jason, "~> 1.2.0"}
+      {:jason, "~> 1.2.0"},
+      {:ok, "~> 2.3"}
     ]
   end
 
