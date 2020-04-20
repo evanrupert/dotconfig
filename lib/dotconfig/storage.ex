@@ -11,13 +11,12 @@ defmodule Dotconfig.Storage do
     gist_id: binary()
   }
 
-  @spec initialize(binary(), binary()) :: :ok
+  @spec initialize(binary(), binary()) :: {:ok, any()} | {:error, binary()}
   def initialize(auth_token, gist_id) do
     if not File.exists?(@dotfile_path) do
       write_new_file(gist_id, auth_token)
     else
       replace_file_gist_id(gist_id)
-      :ok
     end
   end
 

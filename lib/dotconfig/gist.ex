@@ -4,8 +4,12 @@ defmodule Dotconfig.Gist do
 
   alias Dotconfig.{API, Storage}
 
+  @initial_filename "Dotconfig"
+
+  @type gist_files :: %{required(binary()) => %{content: binary()}}
+
   @type gist_create :: %{
-    files: %{required(binary()) => %{content: binary()}},
+    files: gist_files(),
     public: boolean(),
     description: binary()
   }
@@ -19,7 +23,7 @@ defmodule Dotconfig.Gist do
   def create_initial(auth_token) do
     gist_request = %{
       files: %{
-        "Dotconfig" => %{
+        @initial_filename => %{
           content: "Dotfile storage gist"
         }
       },
@@ -32,20 +36,30 @@ defmodule Dotconfig.Gist do
   end
 
   @spec add_file(binary()) :: {:ok, map()} | {:error, binary()}
-  def add_file(filepath) do
+  def add_file(filepath, opts \\ []) do
+    remove_initial = Keyword.get(opts, :remove_initial, false)
+
     OK.for do
       %{auth_token: token, gist_id: id} <- Storage.get_gist_info()
       content <- File.read(filepath)
       basename = Path.basename(filepath)
     after
-      update(id, token, %{
-        files: %{
-          basename => %{
-            content: content
-          }
+      files = %{
+        basename => %{
+          content: content
         }
-      })
+      }
+
+      files = if remove_initial do remove_initial_file(files) else files end
+
+      update(id, token, %{files: files})
     end
+  end
+
+  @spec remove_initial_file(gist_files()) :: gist_files()
+  defp remove_initial_file(files) do
+    # When update filename is nil, gist will remove the file from the gist
+    Map.put(files, @initial_filename, nil)
   end
 
   @spec get(binary(), binary()) :: API.response

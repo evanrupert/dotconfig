@@ -1,4 +1,7 @@
 defmodule Dotconfig.API do
+  require OK
+  import OK, only: [~>>: 2]
+
   @base_url "https://api.github.com/"
   # @api_token System.get_env("GITHUB_GIST_TOKEN")
 
@@ -39,17 +42,18 @@ defmodule Dotconfig.API do
     |> parse_resp()
   end
 
-  defp parse_resp(response) do
-    with {:ok, resp} <- response,
-         json <- Jason.decode!(resp.body)
-      do
-      {:ok, json}
-    else
-      {:error, %Jason.DecodeError{}} ->
-        {:error, "Json Decode Error"}
-      {:error, %HTTPoison.Error{reason: reason}} ->
-        {:error, reason}
-    end
+  @spec parse_resp({:ok, HTTPoison.Response.t()} | {:error, HTTPoison.Error.t()}) :: {:ok, map()} | {:error, binary()}
+  defp parse_resp( {:ok, %HTTPoison.Response{status_code: status, body: body}})
+    when status in 200..300 do
+    Jason.decode(body)
+  end
+
+  defp parse_resp({:ok, %HTTPoison.Response{body: body}}) do
+    Jason.decode(body) ~>> (fn json -> {:error, json["message"]} end).()
+  end
+
+  defp parse_resp({:error, %HTTPoison.Error{reason: reason}}) do
+    {:error, reason}
   end
 
 end
